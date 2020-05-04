@@ -6,11 +6,16 @@ var cookieParser = require('cookie-parser');
 
 var client_id = '6af837285d024dcd8d64bae9cec7a332'; // Your client id
 var client_secret = 'ac913c32882949c4bf926b365e3e9e77'; // Your secret
-var redirect_uri = 'http://localhost:8888/callback/'; // Your redirect uri
+ // Your redirect uri
 
 var stateKey = 'spotify_auth_state';
 
 var app = express();
+
+const PORT = process.env.PORT || 3000
+const IP = process.env.IP || "localhost"
+
+var redirect_uri = `http://${IP}:${PORT}/callback/`;
 
 app.use(express.static(__dirname + '/public'))
    .use(cors())
@@ -119,8 +124,9 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-console.log('Listening on 8888');
-app.listen(8888);
+app.listen(PORT, IP, function() {
+  console.log('running at ' + IP + ':' + PORT);
+  });
 
 
 /**
