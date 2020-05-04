@@ -4,6 +4,8 @@
   "description": "spotify collaborative queue using web API",
   "main": "app.js",
   "scripts": {
+    "start": "node app.js",
+    "start-nodemon": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -20,5 +22,8 @@
     "express": "^4.17.1",
     "querystring": "^0.2.0",
     "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
   }
 }
