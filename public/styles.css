@@ -1,0 +1,78 @@
+
+
+#login, #loggedin {
+    display: none;
+}
+
+.text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 500px;
+}
+
+#profile-pic {
+    border-radius: 50%;
+    width: 100px;
+}
+
+#oauth {
+    border-top: 3px solid black;
+}
+
+#heading {
+    border-bottom: 3px solid black;
+}
+
+.right {
+    text-align: right;
+}
+
+.thin-bottom-border {
+    padding-bottom: 3px;
+    border-bottom: 1px solid black;
+}
+
+.cover {
+    width: 80px;
+    border: 1px solid black;
+    float: left;
+    margin-left: 10px;
+}
+
+.songDiv {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    background-color: #e8e8e8;
+    align-items: center;
+    margin-bottom: 10px;
+    
+}
+
+.songName {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    text-align: center;
+}
+
+
+.control {
+    float: right;
+    width: 85px;
+    height: 85px;
+    font-size: large;
+    color: black;
+    background-color: #2b8724;
+    margin: 5px;
+    border-radius: 10px;
+}
+
+.red {
+    background-color: #bd2828;
+}
+
+.songDiv:hover {
+    box-shadow: 5px 5px 30px;
+}

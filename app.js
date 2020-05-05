@@ -1,25 +1,37 @@
-var express = require('express'); // Express web server framework
+const PORT = process.env.PORT || 3000
+const IP = process.env.IP || "localhost"
+
+var express = require('express'); 
+var app = express();// Express web server framework
+var server = app.listen(PORT)
 var request = require('request'); // "Request" library
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
+var bodyParser = require("body-parser")
+var io = require("socket.io")(server)
+var Spotify = require('node-spotify-api');
 
 var client_id = '6af837285d024dcd8d64bae9cec7a332'; // Your client id
 var client_secret = 'ac913c32882949c4bf926b365e3e9e77'; // Your secret
- // Your redirect uri
 
 var stateKey = 'spotify_auth_state';
 
-var app = express();
+var connectedSockets = []
 
-const PORT = process.env.PORT || 3000
-const IP = process.env.IP || "localhost"
+var redirect_uri = `http://7a798363.ngrok.io/callback/`;
+// var redirect_uri = `http://${IP}:${PORT}/callback/`;
 
-var redirect_uri = `http://${IP}:${PORT}/callback/`;
+var spotifyAPI = new Spotify({
+  id: client_id,
+  secret: client_secret
+});
+
 
 app.use(express.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
+app.use(bodyParser.urlencoded({extended: false}))
 
 app.get('/login', function(req, res) {
 
@@ -27,7 +39,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email';
+  var scope = 'user-read-private user-read-email app-remote-control playlist-modify-private playlist-modify-public user-read-currently-playing user-modify-playback-state';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -81,15 +93,18 @@ app.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
-          console.log(body);
+          const {id} = body;
+
+          res.redirect('/#' +
+          querystring.stringify({
+            access_token: access_token,
+            refresh_token: refresh_token,
+            user_id: id
+          }));
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect('/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
+        
       } else {
         res.redirect('/#' +
           querystring.stringify({
@@ -100,33 +115,43 @@ app.get('/callback', function(req, res) {
   }
 });
 
-app.get('/refresh_token', function(req, res) {
+app.post("/sms", (req, res) => {
+  let message = req.body.Body;
 
-  // requesting access token from refresh token
-  var refresh_token = req.query.refresh_token;
-  var authOptions = {
-    url: 'https://accounts.spotify.com/api/token',
-    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
-    form: {
-      grant_type: 'refresh_token',
-      refresh_token: refresh_token
-    },
-    json: true
-  };
+ 
+  spotifyAPI.search({type: "track", query: message})
+  .then((response) => {
+    let song = response.tracks.items[0] ;
+    let title = song.name;
+    let artist = song.artists[0].name;
+    let cover = song.album.images[0].url;
+    let uri = song.uri;
 
-  request.post(authOptions, function(error, response, body) {
-    if (!error && response.statusCode === 200) {
-      var access_token = body.access_token;
-      res.send({
-        'access_token': access_token
-      });
+    let songData = {
+      title,
+      artist,
+      cover,
+      uri
+    };
+
+    if (connectedSockets.length > 0) {
+      io.to(connectedSockets[connectedSockets.length-1]).emit("songSuggestion", songData)
     }
+
+  }).catch((err) => {
+    console.log(err)
   });
 });
 
+io.on("connection", (socket) => {
+  console.log("new socket")
+  connectedSockets.push(socket.id)
+});
+
+
 app.listen(PORT, IP, function() {
   console.log('running at ' + IP + ':' + PORT);
-  });
+});
 
 
 /**
